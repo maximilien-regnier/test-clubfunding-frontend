@@ -1,29 +1,15 @@
+import { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
+import { fetchProjects, clearError } from '../store/slices/projectsSlice';
 
 const ProjectsList = () => {
-  const projects = [
-    {
-      id: 1,
-      name: "Site Web E-commerce",
-      created_at: "2024-01-15T10:30:00Z",
-      updated_at: "2024-01-20T14:45:00Z",
-      tasks_count: 12
-    },
-    {
-      id: 2,
-      name: "Application Mobile",
-      created_at: "2024-01-10T09:15:00Z",
-      updated_at: "2024-01-18T16:20:00Z",
-      tasks_count: 8
-    },
-    {
-      id: 3,
-      name: "API Backend",
-      created_at: "2024-01-05T11:00:00Z",
-      updated_at: "2024-01-22T13:30:00Z",
-      tasks_count: 15
-    }
-  ];
+  const dispatch = useDispatch();
+  const { items: projects, loading, error } = useSelector(state => state.projects);
+
+  useEffect(() => {
+    dispatch(fetchProjects());
+  }, [dispatch]);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
@@ -32,6 +18,32 @@ const ProjectsList = () => {
       day: 'numeric'
     });
   };
+
+  const handleClearError = () => {
+    dispatch(clearError());
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-64">
+        <span className="loading loading-spinner loading-lg"></span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="alert alert-error">
+        <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>Erreur lors du chargement des projets: {error}</span>
+        <div>
+          <button className="btn btn-sm" onClick={handleClearError}>Réessayer</button>
+        </div>
+      </div>
+    );
+  }
 
 
   return (
