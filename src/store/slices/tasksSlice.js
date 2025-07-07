@@ -84,14 +84,45 @@ const tasksSlice = createSlice({
   initialState: {
     items: [],
     loading: false,
-    error: null,
     creating: false,
     updating: false,
     deleting: false,
+    error: null,
+    form: {
+      data: {
+        title: '',
+        status: 'pending',
+        project_id: null
+      },
+      errors: {},
+      isSubmitting: false
+    }
   },
   reducers: {
     clearError: (state) => {
       state.error = null;
+    },
+    setFormData: (state, action) => {
+      state.form.data = { ...state.form.data, ...action.payload };
+    },
+    setFormErrors: (state, action) => {
+      state.form.errors = action.payload;
+    },
+    clearFormErrors: (state) => {
+      state.form.errors = {};
+    },
+    resetForm: (state) => {
+      state.form.data = { title: '', status: 'pending', project_id: null };
+      state.form.errors = {};
+      state.form.isSubmitting = false;
+    },
+    initializeForm: (state, action) => {
+      state.form.data = action.payload || { title: '', status: 'pending', project_id: null };
+      state.form.errors = {};
+      state.form.isSubmitting = false;
+    },
+    setFormSubmitting: (state, action) => {
+      state.form.isSubmitting = action.payload;
     },
     clearTasks: (state) => {
       state.items = [];
@@ -114,28 +145,39 @@ const tasksSlice = createSlice({
       .addCase(createTask.pending, (state) => {
         state.creating = true;
         state.error = null;
+        state.form.isSubmitting = true;
       })
       .addCase(createTask.fulfilled, (state, action) => {
         state.creating = false;
+        state.form.isSubmitting = false;
         state.items.push(action.payload.data || action.payload);
+        state.form.data = { title: '', status: 'pending', project_id: null };
+        state.form.errors = {};
       })
       .addCase(createTask.rejected, (state, action) => {
         state.creating = false;
+        state.form.isSubmitting = false;
         state.error = action.payload;
       })
       .addCase(updateTask.pending, (state) => {
         state.updating = true;
         state.error = null;
+        state.form.isSubmitting = true;
       })
       .addCase(updateTask.fulfilled, (state, action) => {
         state.updating = false;
-        const index = state.items.findIndex(item => item.id === action.payload.id);
+        state.form.isSubmitting = false;
+        const task = action.payload.data || action.payload;
+        const index = state.items.findIndex(item => item.id === task.id);
         if (index !== -1) {
-          state.items[index] = action.payload.data || action.payload;
+          state.items[index] = task;
         }
+        state.form.data = { title: '', status: 'pending', project_id: null };
+        state.form.errors = {};
       })
       .addCase(updateTask.rejected, (state, action) => {
         state.updating = false;
+        state.form.isSubmitting = false;
         state.error = action.payload;
       })
       .addCase(deleteTask.pending, (state) => {
@@ -153,5 +195,14 @@ const tasksSlice = createSlice({
   },
 });
 
-export const { clearError, clearTasks } = tasksSlice.actions;
+export const { 
+  clearError, 
+  clearTasks,
+  setFormData, 
+  setFormErrors, 
+  clearFormErrors, 
+  resetForm, 
+  initializeForm, 
+  setFormSubmitting 
+} = tasksSlice.actions;
 export default tasksSlice.reducer;
