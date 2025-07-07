@@ -1,27 +1,43 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useHistory } from 'react-router-dom';
-import { createProject, updateProject, clearError } from '../store/slices/projectsSlice';
+import { 
+  createProject, 
+  updateProject, 
+  clearError,
+  setFormData,
+  setFormErrors,
+  resetForm,
+  initializeForm
+} from '../store/slices/projectsSlice';
 
 const ProjectForm = ({ project = null, isEdit = false }) => {
-  const [formData, setFormData] = useState({
-    name: project?.name || ''
-  });
-  const [errors, setErrors] = useState({});
-  
   const dispatch = useDispatch();
   const history = useHistory();
-  const { creating, updating, error } = useSelector(state => state.projects);
+  const { 
+    creating, 
+    updating, 
+    error, 
+    form: { data: formData, errors, isSubmitting } 
+  } = useSelector(state => state.projects);
 
-  const isLoading = creating || updating;
+  const isLoading = creating || updating || isSubmitting;
 
   useEffect(() => {
     if (project && isEdit) {
-      setFormData({
+      dispatch(initializeForm({
         name: project.name || ''
-      });
+      }));
+    } else {
+      dispatch(resetForm());
     }
-  }, [project, isEdit]);
+  }, [dispatch, project, isEdit]);
+
+  useEffect(() => {
+    return () => {
+      dispatch(resetForm());
+    };
+  }, [dispatch]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -34,22 +50,18 @@ const ProjectForm = ({ project = null, isEdit = false }) => {
       newErrors.name = 'Le nom du projet ne peut pas dépasser 255 caractères';
     }
 
-    setErrors(newErrors);
+    dispatch(setFormErrors(newErrors));
     return Object.keys(newErrors).length === 0;
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    dispatch(setFormData({ [name]: value }));
     
     if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
+      const newErrors = { ...errors };
+      delete newErrors[name];
+      dispatch(setFormErrors(newErrors));
     }
   };
 
