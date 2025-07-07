@@ -4,14 +4,26 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost/api'
 
 export const fetchProjects = createAsyncThunk(
   'projects/fetchProjects',
-  async (_, { rejectWithValue }) => {
+  async (params = {}, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/projects`);
+      const queryParams = new URLSearchParams();
+      
+      if (params.page) queryParams.append('page', params.page);
+      if (params.per_page) queryParams.append('per_page', params.per_page);
+      if (params.name) queryParams.append('name', params.name);
+      if (params.sort_by) queryParams.append('sort_by', params.sort_by);
+      if (params.sort_order) queryParams.append('sort_order', params.sort_order);
+      if (params.created_from) queryParams.append('created_from', params.created_from);
+      if (params.created_to) queryParams.append('created_to', params.created_to);
+      
+      const url = `${API_BASE_URL}/projects${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+      const response = await fetch(url);
+      
       if (!response.ok) {
         throw new Error('Failed to fetch projects');
       }
       const data = await response.json();
-      return data;
+      return { data, params };
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -104,6 +116,19 @@ const projectsSlice = createSlice({
     updating: false,
     deleting: false,
     error: null,
+    pagination: {
+      current_page: 1,
+      per_page: 10,
+      total: 0,
+      last_page: 1
+    },
+    filters: {
+      name: '',
+      sort_by: 'created_at',
+      sort_order: 'desc',
+      created_from: '',
+      created_to: ''
+    },
     form: {
       data: {
         name: ''
@@ -138,6 +163,21 @@ const projectsSlice = createSlice({
     setFormSubmitting: (state, action) => {
       state.form.isSubmitting = action.payload;
     },
+    setFilters: (state, action) => {
+      state.filters = { ...state.filters, ...action.payload };
+    },
+    resetFilters: (state) => {
+      state.filters = {
+        name: '',
+        sort_by: 'created_at',
+        sort_order: 'desc',
+        created_from: '',
+        created_to: ''
+      };
+    },
+    setPagination: (state, action) => {
+      state.pagination = { ...state.pagination, ...action.payload };
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -147,7 +187,30 @@ const projectsSlice = createSlice({
       })
       .addCase(fetchProjects.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = action.payload.data || action.payload;
+        const { data, params } = action.payload;
+        
+        if (data && data.meta) {
+          state.items = data.data;
+          state.pagination = {
+            current_page: data.meta.current_page,
+            per_page: data.meta.per_page,
+            total: data.meta.total,
+            last_page: data.meta.last_page
+          };
+        } else {
+          state.items = data.data || data;
+        }
+        
+        if (params) {
+          const filterParams = {
+            name: params.name || '',
+            sort_by: params.sort_by || 'created_at',
+            sort_order: params.sort_order || 'desc',
+            created_from: params.created_from || '',
+            created_to: params.created_to || ''
+          };
+          state.filters = { ...state.filters, ...filterParams };
+        }
       })
       .addCase(fetchProjects.rejected, (state, action) => {
         state.loading = false;
@@ -231,6 +294,9 @@ export const {
   clearFormErrors, 
   resetForm, 
   initializeForm, 
-  setFormSubmitting 
+  setFormSubmitting,
+  setFilters,
+  resetFilters,
+  setPagination
 } = projectsSlice.actions;
 export default projectsSlice.reducer;

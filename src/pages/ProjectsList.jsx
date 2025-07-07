@@ -2,10 +2,12 @@ import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { fetchProjects, clearError } from '../store/slices/projectsSlice';
+import ProjectsFilters from '../components/ProjectsFilters';
+import Pagination from '../components/Pagination';
 
 const ProjectsList = () => {
   const dispatch = useDispatch();
-  const { items: projects, loading, error } = useSelector(state => state.projects);
+  const { items: projects, loading, error, filters, pagination } = useSelector(state => state.projects);
 
   useEffect(() => {
     dispatch(fetchProjects());
@@ -23,13 +25,40 @@ const ProjectsList = () => {
     dispatch(clearError());
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-64">
-        <span className="loading loading-spinner loading-lg"></span>
-      </div>
-    );
-  }
+  const handleFiltersChange = (newFilters) => {
+    const params = {
+      ...filters,
+      ...newFilters,
+      page: 1,
+      per_page: pagination.per_page
+    };
+    
+    Object.keys(params).forEach(key => {
+      if (!params[key] || params[key] === '') {
+        delete params[key];
+      }
+    });
+    
+    dispatch(fetchProjects(params));
+  };
+
+  const handlePageChange = (page, perPage = null) => {
+    const params = {
+      ...filters,
+      page: page || pagination.current_page,
+      per_page: perPage || pagination.per_page
+    };
+    
+    Object.keys(params).forEach(key => {
+      if (!params[key] || params[key] === '') {
+        delete params[key];
+      }
+    });
+    
+    dispatch(fetchProjects(params));
+  };
+
+
 
   if (error) {
     return (
@@ -63,6 +92,17 @@ const ProjectsList = () => {
         </div>
       </div>
 
+      {/* Filters */}
+      <ProjectsFilters onFiltersChange={handleFiltersChange} />
+      
+      {/* Loading indicator */}
+      {loading && (
+        <div className="flex justify-center items-center py-4">
+          <span className="loading loading-spinner loading-md mr-2"></span>
+          <span className="text-sm text-base-content/70">Chargement...</span>
+        </div>
+      )}
+
       {/* Projects Grid */}
       {projects.length === 0 ? (
         <div className="hero min-h-96">
@@ -90,7 +130,6 @@ const ProjectsList = () => {
               <div className="card-body">
                 <h2 className="card-title">
                   {project.name}
-                  <div className="badge badge-secondary">{project.tasks_count}</div>
                 </h2>
                 
                 <div className="stats stats-vertical shadow">
@@ -124,7 +163,10 @@ const ProjectsList = () => {
             </div>
           ))}
         </div>
-      )}      
+      )}
+      
+      {/* Pagination */}
+      <Pagination onPageChange={handlePageChange} />
     </div>
   );
 };

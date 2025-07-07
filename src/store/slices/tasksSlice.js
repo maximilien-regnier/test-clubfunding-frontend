@@ -4,9 +4,21 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost/api'
 
 export const fetchTasksByProject = createAsyncThunk(
   'tasks/fetchTasksByProject',
-  async (projectId, { rejectWithValue }) => {
+  async ({ projectId, params = {} }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/projects/${projectId}/tasks`);
+      const queryParams = new URLSearchParams();
+      
+      if (params.page) queryParams.append('page', params.page);
+      if (params.per_page) queryParams.append('per_page', params.per_page);
+      if (params.title) queryParams.append('title', params.title);
+      if (params.sort_by) queryParams.append('sort_by', params.sort_by);
+      if (params.sort_order) queryParams.append('sort_order', params.sort_order);
+      if (params.status) queryParams.append('status', params.status);
+
+      
+      const url = `${API_BASE_URL}/projects/${projectId}/tasks${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+      const response = await fetch(url);
+      
       if (!response.ok) {
         throw new Error('Failed to fetch tasks');
       }
@@ -88,6 +100,18 @@ const tasksSlice = createSlice({
     updating: false,
     deleting: false,
     error: null,
+    pagination: {
+      current_page: 1,
+      per_page: 10,
+      total: 0,
+      last_page: 1
+    },
+    filters: {
+      title: '',
+      sort_by: 'created_at',
+      sort_order: 'desc',
+      status: ''
+    },
     form: {
       data: {
         title: '',
@@ -127,6 +151,21 @@ const tasksSlice = createSlice({
     clearTasks: (state) => {
       state.items = [];
     },
+    setFilters: (state, action) => {
+      state.filters = { ...state.filters, ...action.payload };
+    },
+    resetFilters: (state) => {
+      state.filters = {
+        search: '',
+        sort_by: 'created_at',
+        sort_direction: 'desc',
+        status: '',
+        overdue: false
+      };
+    },
+    setPagination: (state, action) => {
+      state.pagination = { ...state.pagination, ...action.payload };
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -136,7 +175,17 @@ const tasksSlice = createSlice({
       })
       .addCase(fetchTasksByProject.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = action.payload.data || action.payload;
+        if (action.payload.data && action.payload.meta) {
+          state.items = action.payload.data;
+          state.pagination = {
+            current_page: action.payload.meta.current_page,
+            per_page: action.payload.meta.per_page,
+            total: action.payload.meta.total,
+            last_page: action.payload.meta.last_page
+          };
+        } else {
+          state.items = action.payload.data || action.payload;
+        }
       })
       .addCase(fetchTasksByProject.rejected, (state, action) => {
         state.loading = false;
@@ -203,6 +252,9 @@ export const {
   clearFormErrors, 
   resetForm, 
   initializeForm, 
-  setFormSubmitting 
+  setFormSubmitting,
+  setFilters,
+  resetFilters,
+  setPagination
 } = tasksSlice.actions;
 export default tasksSlice.reducer;
