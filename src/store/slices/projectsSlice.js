@@ -18,6 +18,22 @@ export const fetchProjects = createAsyncThunk(
   }
 );
 
+export const fetchProjectById = createAsyncThunk(
+  'projects/fetchProjectById',
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/projects/${id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch project');
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
 export const createProject = createAsyncThunk(
   'projects/createProject',
   async (projectData, { rejectWithValue }) => {
@@ -108,6 +124,24 @@ const projectsSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+      .addCase(fetchProjectById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchProjectById.fulfilled, (state, action) => {
+        state.loading = false;
+        const project = action.payload.data || action.payload;
+        const existingIndex = state.items.findIndex(item => item.id === project.id);
+        if (existingIndex !== -1) {
+          state.items[existingIndex] = project;
+        } else {
+          state.items.push(project);
+        }
+      })
+      .addCase(fetchProjectById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
       .addCase(createProject.pending, (state) => {
         state.creating = true;
         state.error = null;
@@ -126,9 +160,10 @@ const projectsSlice = createSlice({
       })
       .addCase(updateProject.fulfilled, (state, action) => {
         state.updating = false;
-        const index = state.items.findIndex(item => item.id === action.payload.id);
+        const project = action.payload.data || action.payload;
+        const index = state.items.findIndex(item => item.id === project.id);
         if (index !== -1) {
-          state.items[index] = action.payload.data || action.payload;
+          state.items[index] = project;
         }
       })
       .addCase(updateProject.rejected, (state, action) => {

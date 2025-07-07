@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useParams, Link, useHistory } from 'react-router-dom';
 import { fetchTasksByProject, deleteTask, clearError as clearTaskError } from '../store/slices/tasksSlice';
-import { deleteProject } from '../store/slices/projectsSlice';
+import { deleteProject, fetchProjectById } from '../store/slices/projectsSlice';
 
 const ProjectDetails = () => {
   const { id } = useParams();
@@ -20,9 +20,12 @@ const ProjectDetails = () => {
 
   useEffect(() => {
     if (id) {
+      if (!project) {
+        dispatch(fetchProjectById(id));
+      }
       dispatch(fetchTasksByProject(id));
     }
-  }, [dispatch, id]);
+  }, [dispatch, id, project]);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
