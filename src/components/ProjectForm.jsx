@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useHistory } from 'react-router-dom';
+import FormField from './FormField';
+import PageHeader from './PageHeader';
 import { 
   createProject, 
   updateProject, 
@@ -107,21 +109,14 @@ const ProjectForm = ({ project = null, isEdit = false }) => {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="hero bg-base-200 rounded-lg mb-6">
-        <div className="hero-content text-center">
-          <div className="max-w-md">
-            <h1 className="text-4xl font-bold">
-              {isEdit ? 'Modifier le projet' : 'Nouveau projet'}
-            </h1>
-            <p className="py-6">
-              {isEdit 
-                ? 'Modifiez les informations de votre projet'
-                : 'Créez un nouveau projet pour organiser vos tâches'
-              }
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title={isEdit ? 'Modifier le projet' : 'Nouveau projet'}
+        subtitle={isEdit 
+          ? 'Modifiez les informations de votre projet'
+          : 'Créez un nouveau projet pour organiser vos tâches'
+        }
+        backLink={isEdit && project ? `/projects/${project.id}` : '/projects'}
+      />
 
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
@@ -138,25 +133,15 @@ const ProjectForm = ({ project = null, isEdit = false }) => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-semibold">Nom du projet *</span>
-              </label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                className={`input input-bordered w-full ${errors.name ? 'input-error' : ''}`}
-                placeholder="Entrez le nom du projet"
-                disabled={isLoading}
-              />
-              {errors.name && (
-                <label className="label">
-                  <span className="label-text-alt text-error">{errors.name}</span>
-                </label>
-              )}
-            </div>
+            <FormField
+              label="Nom du projet"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              error={errors.name}
+              placeholder="Entrez le nom du projet"
+              required
+            />
 
             <div className="divider"></div>
 

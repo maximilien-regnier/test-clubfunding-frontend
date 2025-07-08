@@ -5,6 +5,11 @@ import { fetchTasksByProject, deleteTask, clearError as clearTaskError } from '.
 import { deleteProject, fetchProjectById } from '../store/slices/projectsSlice';
 import TasksFilters from '../components/TasksFilters';
 import TasksPagination from '../components/TasksPagination';
+import TaskCard from '../components/TaskCard';
+import ConfirmModal from '../components/ConfirmModal';
+import EmptyState from '../components/EmptyState';
+import LoadingSpinner from '../components/LoadingSpinner';
+import PageHeader from '../components/PageHeader';
 
 const ProjectDetails = () => {
   const { id } = useParams();
@@ -103,32 +108,25 @@ const ProjectDetails = () => {
 
   return (
     <div className="space-y-6">
-      <div className="hero bg-base-200 rounded-lg">
-        <div className="hero-content text-center">
-          <div className="max-w-md">
-            <h1 className="text-4xl font-bold">{project.name}</h1>
-            <p className="py-6">
-              Créé le {formatDate(project.created_at)}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to={`/projects/${id}/edit`} className="btn btn-primary">
-                Modifier le projet
-              </Link>
-              <button 
-                className="btn btn-error btn-outline"
-                onClick={handleDeleteProject}
-                disabled={deletingProject}
-              >
-                {deletingProject ? (
-                  <span className="loading loading-spinner loading-sm"></span>
-                ) : (
-                  'Supprimer le projet'
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title={project.name}
+        subtitle={`Créé le ${formatDate(project.created_at)}`}
+        backLink="/projects"
+        backText="Retour aux projets"
+        actions={[
+          {
+            text: 'Modifier le projet',
+            link: `/projects/${id}/edit`,
+            primary: true
+          },
+          {
+            text: 'Supprimer le projet',
+            onClick: handleDeleteProject,
+            loading: deletingProject,
+            className: 'btn-error btn-outline'
+          }
+        ]}
+      />
 
       <div className="stats stats-vertical lg:stats-horizontal shadow w-full">
         <div className="stat">
@@ -172,57 +170,26 @@ const ProjectDetails = () => {
 
           {loadingTasks ? (
             <div className="flex justify-center py-8">
-              <span className="loading loading-spinner loading-lg"></span>
+              <LoadingSpinner size="lg" />
             </div>
           ) : tasks.length === 0 ? (
-            <div className="mockup-window border bg-base-300">
-              <div className="flex justify-center px-4 py-16 bg-base-200">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold mb-2">Aucune tâche</h3>
-                  <p className="text-base-content/70 mb-4">
-                    Ce projet ne contient aucune tâche pour le moment.
-                  </p>
-                  <Link to={`/tasks/new?project_id=${id}`} className="btn btn-primary">
-                    Créer une tâche
-                  </Link>
-                </div>
-              </div>
-            </div>
+            <EmptyState
+              title="Aucune tâche"
+              message="Ce projet ne contient aucune tâche pour le moment."
+              actionText="Créer une tâche"
+              actionLink={`/tasks/new?project_id=${id}`}
+              icon="📝"
+            />
           ) : (
             <div className="space-y-3">
               {tasks.map(task => (
-                <div key={task.id} className="card bg-base-200 shadow-sm">
-                  <div className="card-body p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h3 className="font-semibold">{task.title}</h3>
-                        <div className="flex items-center gap-2 mt-2">
-                          <div className={`badge ${task.status === 'completed' ? 'badge-success' : 'badge-warning'}`}>
-                            {task.status === 'completed' ? 'Terminée' : 'En cours'}
-                          </div>
-                          <span className="text-sm text-base-content/70">
-                            Créée le {formatDate(task.created_at)}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="join">
-                        <Link 
-                          to={`/tasks/${task.id}/edit`} 
-                          className="btn btn-sm join-item"
-                        >
-                          Modifier
-                        </Link>
-                        <button 
-                          className="btn btn-sm btn-error join-item"
-                          onClick={() => handleDeleteTask(task)}
-                          disabled={deletingTask}
-                        >
-                          Supprimer
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  onDelete={handleDeleteTask}
+                  formatDate={formatDate}
+                  deleting={deletingTask}
+                />
               ))}
             </div>
           )}
@@ -231,70 +198,25 @@ const ProjectDetails = () => {
         </div>
       </div>
 
-      {showDeleteModal && (
-        <div className="modal modal-open">
-          <div className="modal-box">
-            <h3 className="font-bold text-lg">Confirmer la suppression</h3>
-            <p className="py-4">
-              Êtes-vous sûr de vouloir supprimer la tâche "{taskToDelete?.title}" ?
-              Cette action est irréversible.
-            </p>
-            <div className="modal-action">
-              <button 
-                className="btn btn-error"
-                onClick={confirmDeleteTask}
-                disabled={deletingTask}
-              >
-                {deletingTask ? (
-                  <span className="loading loading-spinner loading-sm"></span>
-                ) : (
-                  'Supprimer'
-                )}
-              </button>
-              <button 
-                className="btn"
-                onClick={() => setShowDeleteModal(false)}
-                disabled={deletingTask}
-              >
-                Annuler
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDeleteTask}
+        title="Confirmer la suppression"
+        message={`Êtes-vous sûr de vouloir supprimer la tâche "${taskToDelete?.title}" ? Cette action est irréversible.`}
+        confirmText="Supprimer"
+        loading={deletingTask}
+      />
 
-      {showProjectDeleteModal && (
-        <div className="modal modal-open">
-          <div className="modal-box">
-            <h3 className="font-bold text-lg">Confirmer la suppression du projet</h3>
-            <p className="py-4">
-              Êtes-vous sûr de vouloir supprimer le projet "{project.name}" ?
-              Toutes les tâches associées seront également supprimées.
-              Cette action est irréversible.
-            </p>
-            <div className="modal-action">
-              <button 
-                className="btn btn-error"
-                onClick={confirmDeleteProject}
-                disabled={deletingProject}
-              >
-                {deletingProject ? (
-                  <span className="loading loading-spinner loading-sm"></span>
-                ) : (
-                  'Supprimer le projet'
-                )}
-              </button>
-              <button 
-                className="btn"
-                onClick={() => setShowProjectDeleteModal(false)}
-                disabled={deletingProject}
-              >
-                Annuler
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={showProjectDeleteModal}
+        onClose={() => setShowProjectDeleteModal(false)}
+        onConfirm={confirmDeleteProject}
+        title="Confirmer la suppression du projet"
+        message={`Êtes-vous sûr de vouloir supprimer le projet "${project?.name}" ? Toutes les tâches associées seront également supprimées. Cette action est irréversible.`}
+        confirmText="Supprimer le projet"
+        loading={deletingProject}
+      />
     </div>
   );
 };

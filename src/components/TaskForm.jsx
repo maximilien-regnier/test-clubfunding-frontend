@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useHistory, useLocation } from 'react-router-dom';
+import FormField from './FormField';
+import PageHeader from './PageHeader';
 import { 
   createTask, 
   updateTask, 
@@ -157,46 +159,28 @@ const TaskForm = ({ task = null, isEdit = false }) => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-semibold">Titre de la tâche *</span>
-              </label>
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleInputChange}
-                className={`input input-bordered w-full ${errors.title ? 'input-error' : ''}`}
-                placeholder="Entrez le titre de la tâche"
-                disabled={isLoading}
-              />
-              {errors.title && (
-                <label className="label">
-                  <span className="label-text-alt text-error">{errors.title}</span>
-                </label>
-              )}
-            </div>
+            <FormField
+              label="Titre de la tâche"
+              name="title"
+              value={formData.title}
+              onChange={handleInputChange}
+              error={errors.title}
+              placeholder="Entrez le titre de la tâche"
+              required
+            />
 
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-semibold">Statut *</span>
-              </label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleInputChange}
-                className={`select select-bordered w-full ${errors.status ? 'select-error' : ''}`}
-                disabled={isLoading}
-              >
-                <option value="pending">En cours</option>
-                <option value="completed">Terminée</option>
-              </select>
-              {errors.status && (
-                <label className="label">
-                  <span className="label-text-alt text-error">{errors.status}</span>
-                </label>
-              )}
-            </div>
+            <FormField
+              label="Statut"
+              name="status"
+              value={formData.status}
+              onChange={handleInputChange}
+              error={errors.status}
+              options={[
+                { value: 'pending', label: 'En attente' },
+                { value: 'completed', label: 'Terminée' }
+              ]}
+              required
+            />
 
             <div className="divider"></div>
 
