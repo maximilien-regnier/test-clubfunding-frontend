@@ -18,8 +18,8 @@ Consultez le README de ce dépôt pour les instructions d'installation et d'util
 
 1. Cloner le repository
 ```bash
-git clone [URL_DU_REPO]
-cd test-technique
+git clone git@github.com:maximilien-regnier/test-clubfunding-frontend.git
+cd test-clubfunding-frontend
 ```
 
 2. Installer les dépendances
