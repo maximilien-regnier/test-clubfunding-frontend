@@ -156,11 +156,10 @@ const tasksSlice = createSlice({
     },
     resetFilters: (state) => {
       state.filters = {
-        search: '',
+        title: '',
         sort_by: 'created_at',
-        sort_direction: 'desc',
-        status: '',
-        overdue: false
+        sort_order: 'desc',
+        status: ''
       };
     },
     setPagination: (state, action) => {
@@ -185,6 +184,13 @@ const tasksSlice = createSlice({
           };
         } else {
           state.items = action.payload.data || action.payload;
+        }
+        
+        if (action.meta.arg.params) {
+          state.filters = {
+            ...state.filters,
+            ...action.meta.arg.params
+          };
         }
       })
       .addCase(fetchTasksByProject.rejected, (state, action) => {
