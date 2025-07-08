@@ -1,12 +1,74 @@
-# React + Vite
+# Test technique ClubFunding partie frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+La partie frontend est réalisée avec React 17 comme demandé dans le document de test technique. 
 
-Currently, two official plugins are available:
+Il s'agit d'une application React qui permet de gérer des projets et leurs tâches associées. Elle offre des fonctionnalités complètes de CRUD, pagination, filtrage et validation.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Pour la partie backend, une API REST Laravel est disponible dans un dépôt séparé. ici : https://github.com/maximilien-regnier/test-clubfunding-api
+Consultez le README de ce dépôt pour les instructions d'installation et d'utilisation.
 
-## Expanding the ESLint configuration
+## Installation et Configuration
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Prérequis
+- Node.js (version 16 ou supérieure)
+- npm
+- API Laravel configurée et démarrée
+
+### Installation
+
+1. Cloner le repository
+```bash
+git clone [URL_DU_REPO]
+cd test-technique
+```
+
+2. Installer les dépendances
+```bash
+npm install
+```
+
+3. Configuration de l'environnement
+```bash
+cp .env.example .env
+```
+
+Modifier le fichier `.env` avec l'URL de votre API Laravel :
+
+Si l'API est lancée via Docker + Sail l'URL est :
+
+```
+VITE_API_BASE_URL=http://localhost/api
+```
+
+
+4. Démarrer l'application en développement
+```bash
+npm run dev
+```
+
+L'application sera accessible sur `http://localhost:5173`
+
+
+## Utilisation
+
+### Navigation
+- **Page d'accueil** : Liste des projets avec filtres et recherche
+- **Détails du projet** : Vue détaillée avec liste des tâches
+- **Formulaires** : Création/modification de projets et tâches
+
+### Fonctionnalités Principales
+
+1. **Créer un projet**
+   - Cliquer sur "Nouveau Projet"
+   - Remplir le nom du projet
+   - Valider le formulaire
+
+2. **Gérer les tâches**
+   - Accéder aux détails d'un projet
+   - Créer, modifier ou supprimer des tâches
+   - Filtrer par statut
+
+3. **Recherche et filtres**
+   - Utiliser la barre de recherche
+   - Appliquer des filtres par statut
+   - Trier les résultats
